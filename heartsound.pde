@@ -4,11 +4,10 @@ import ddf.minim.*;
 import ddf.minim.analysis.*;
 import ddf.minim.ugens.*;
 import ddf.minim.effects.*;
+
 Table table;
 Table notetable;
-
 FFT fft;
-
 Minim minim;
 AudioPlayer player;
 int noteNum;
@@ -18,12 +17,12 @@ TouchState touchState;
 GameState gameState;
 noteCursor ncursor;
 BpmFrame bpm;
-final int MUSIC_SPEED=10;
+final int MUSIC_SPEED=20;
 //toruko
 final float BPM_SETING=126.8;
 //final float BPM_SETING=171.9;
-final  int FPS=30; //<>//
-final int BASE_FPS=30;
+final  int FPS=60; //<>//
+final int BASE_FPS=60;
 final int START_MUSIC_FRAME=BASE_FPS*100;
 String fileName;
 NoteClass note;
@@ -48,7 +47,7 @@ void setup() {
   noStroke();
   touchState=new TouchState(TouchState.NO_TOUCH);
   gameState=new GameState(GameState.PLAYMODE);
-  ncursor=new noteCursor(40,height/2,30);
+  ncursor=new noteCursor(40,height/2,40);
   bpm=new BpmFrame(BPM_SETING,MUSIC_SPEED);
   note=new NoteClass();
   println("total:"+table.getRowCount());
@@ -56,9 +55,8 @@ void setup() {
   
 }
 void stop() {
-minim.stop();
-super.stop();
-
+  minim.stop();
+  super.stop();
 }
  
 void draw() {
@@ -68,7 +66,6 @@ void draw() {
   text(str(frameRate),130,130);
   bpm.manage();
   touchStateEvent(); //<>//
-  displayMusicProperty();
   if(!timemanager.pState){
      if(timemanager.msCount>START_MUSIC_FRAME&&!startFlag){
         player.play();      
@@ -91,13 +88,13 @@ void draw() {
       //  note.manage((table.getInt(noteNum,0)-((width-ncursor.xPos)/MUSIC_SPEED)),width-8,height/2,16);    
         
         int t=int((width-ncursor.xPos)/((1.0/float(BASE_FPS))*MUSIC_SPEED));
-       note.manage((table.getInt(noteNum,0)-t),width-8,height/2,16);    
+        note.manage((table.getInt(noteNum,0)-t),width-8,height/2,16);    
       }
       for (int i = 0; i < note.spots.size(); i++) { 
         note.display(i); // Display each object
       }
   }
-
+  displayMusicProperty();
   ncursor.display();
   noFill();
 }
@@ -117,11 +114,11 @@ class NoteClass {
         String time=a+"-"+b+"="+c;
         //println(time)  ;
         spots.add( new Note(nxPos, nyPos, diameter, MUSIC_SPEED));
-          noteNum++;
+         noteNum++;
       }
       for(int i=0;i<spots.size();i++){
           Note spot=(Note)spots.get(i);
-          if((ncursor.inCursor(spot.x,spot.y,spot.diameter))&&(touchState.state==touchState.OK_TOUCH)){
+          if((ncursor.inCursor(spot.gTime,timemanager.msCount))&&(touchState.state==touchState.OK_TOUCH)){
             spots.remove(i);
             ellipse(width/2,40,40,40);
           //  print("getin!!");
@@ -188,12 +185,19 @@ class noteCursor{
     EX_COUNTER=d+10;
     excounter=0;
   }
-  boolean inCursor(int n_x,int n_y,int dia){
-    if(dist(xPos,yPos,n_x,n_y)<diameter/2+dia/2&&keyPressed){
-      return true;   
+  boolean inCursor(int g_time,int ms_Count){
+    int t=int((width-ncursor.xPos)/((1.0/float(BASE_FPS))*MUSIC_SPEED));
+    int noteTime=g_time+t;
+    if(abs(noteTime-ms_Count)<100){
+      return true;
     }else{
       return false;
     }
+//    if(dist(xPos,yPos,n_x,n_y)<diameter/2+dia/2&&keyPressed){
+//      return true;   
+//    }else{
+//      return false;
+//    }
   }  
   
   void display(){
@@ -251,7 +255,7 @@ class BpmFrame{
     frames=new ArrayList();
     times=new ArrayList();
     bpm=b;
-    speed=sp;
+    speed=sp/4;
     n_frame=1;
   }
   void manage(){
@@ -295,8 +299,8 @@ class BpmFrame{
   }
 }
 void keyTyped(){
-  int b=timemanager.msCount;
-  println(b);
+//  int b=timemanager.msCount;
+//  println(b);
 //  newRow = table.addRow();
 //  newRow.setInt("frame",count);
   if(timemanager.msCount<START_MUSIC_FRAME){
@@ -404,7 +408,7 @@ class TimeManager{
   void addDiffer(){
     msDiffer+=millis()-tempTime;
     pState=false;
-    println(msDiffer);
+   // println(msDiffer);
   }
 }
 //
